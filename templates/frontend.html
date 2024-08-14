@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive System Info Chatbot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            color: #333;
+            margin: 20px 0;
+        }
+        #chat-container {
+            width: 90%;
+            max-width: 600px;
+            background: #20e4da;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+        #chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 12px;
+            max-width: 80%;
+            position: relative;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .chatbot-message {
+            background: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+        }
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            transform: translateY(-50%);
+        }
+        .user-message::before {
+            right: -20px;
+            border-left: 10px solid #007bff;
+        }
+        .chatbot-message::before {
+            left: -20px;
+            border-right: 10px solid #e9ecef;
+        }
+        #input-container {
+            display: flex;
+            padding: 10px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+        }
+        #message {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        #send-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        #send-button:hover {
+            background: #0056b3;
+        }
+        #send-button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageInput = document.getElementById('message');
+            const sendButton = document.getElementById('send-button');
+            const chatBox = document.getElementById('chat-box');
+            
+            async function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message === '') return;
+
+                // Disable send button and clear input field
+                sendButton.disabled = true;
+                messageInput.value = '';
+
+                // Display user message in the chat
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user-message';
+                userMessageDiv.textContent = `You: ${message}`;
+                chatBox.appendChild(userMessageDiv);
+
+                // Send message to the server
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message }),
+                    });
+                    const data = await response.json();
+
+                    // Display chatbot response in the chat
+                    const chatbotMessageDiv = document.createElement('div');
+                    chatbotMessageDiv.className = 'message chatbot-message';
+                    chatbotMessageDiv.textContent = `System Chatbot: ${data.response}`;
+                    chatBox.appendChild(chatbotMessageDiv);
+                } catch (error) {
+                    console.error('Error:', error);
+                } finally {
+                    // Re-enable send button and auto-scroll
+                    sendButton.disabled = false;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            }
+
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>System Info Chatbot</h1>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="message" placeholder="Ask me about system info...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+</body>
+</html>
